@@ -61,11 +61,47 @@ df <- df_1 %>%
   select(-ID) %>% 
   rename(ID = id) %>% 
   mutate(
-  ID = as.numeric(ID))
-  
+  ID = as.numeric(ID)) %>% 
+  mutate(
+  ID = as.factor(ID))
   
 
 # save the full dataset as a csv file
 #write_csv(abm_data, 'abm_data.csv')
 ```
+
+
+calculating the percentage learned and getting some summary statistics
+
+```{r}
+
+df$Knowledge_percent <-  df$End_knowledge / df$Ticks
+
+sum_stats <- df %>% 
+  split(df$NumberOfStudents) %>% 
+  map(summary) 
+
+sum_stats
+
+df <- df %>% dplyr::group_by(Version)
+
+df %>% summarise(
+  Baseline.attention = mean(Baseline.attention)
+)
+```
+
+
+plots
+
+```{r}
+
+ggplot(df, aes(x = NumberOfStudents, y = Knowledge_percent, fill = NumberOfStudents)) +
+ geom_bar(stat = "summary", fun.y = mean)+
+  geom_errorbar(stat = "summary", fun.data = mean_se)
+
+df %>% ggplot(aes(x = Baseline.attention, y = Version)) + geom_point(aes(color = Version))
+df %>% ggplot(aes(x = Baseline.attention)) + geom_histogram() + facet_wrap(.~ Version)
+
+```
+
 
