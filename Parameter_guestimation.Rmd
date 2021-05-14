@@ -1,0 +1,142 @@
+---
+title: "Parameter_guestimation"
+author: "Martine Lind Jensen"
+date: "11/5/2021"
+output: html_document
+---
+
+
+For the parameters we use we have different beta estimates that we can use as a slope. Since we cant get the intercepts we will guess the something that we will make sense to use as probabilities for the different increments. 
+```{r}
+pacman::p_load(tidyverse, boot,brms)
+```
+
+
+##Baseline attention 
+
+```{r}
+#86 is the total on-task behavior in primary school, 80 is for secondary school
+(86+80)/2
+  #83 
+
+#To make a probability distribution for baseline attention we use normal distribution 
+
+x <- seq(0, 100, by = .1)
+y <- dnorm(x, mean = 83, sd = 12)
+plot(x,y)
+
+df <- data.frame(x,y)
+
+ggplot(df, aes(x,y))+ 
+  geom_line()
+
+#To show sample from the normal distribution 
+
+r <- seq(0, 30)#30 students
+t <- rnorm(r, mean = 83, sd = 12)
+plot(r,t)
+
+rt <- data.frame(r,t)
+
+ggplot(rt, aes(t))+ 
+  stat_bin()
+
+#Seems like it follows the 20, 40, 40 distribution, though values above 95% needs to be 95% as this i more likely, but that fewer students, 20%, will have lower than 75% baseline attention, and that is not crazy values 
+
+```
+
+
+```{r}
+#For probability of being on-task 
+
+#For all in primary schools 
+x <- 5
+  #5 is conservative, 4.5 allows for more change 
+1-inv_logit_scaled(x+log(0.88)*5)
+1-inv_logit_scaled(x+log(0.88)*10)
+1-inv_logit_scaled(x+log(0.88)*15)
+1-inv_logit_scaled(x+log(0.88)*20)
+1-inv_logit_scaled(x+log(0.88)*25)
+1-inv_logit_scaled(x+log(0.88)*30)
+
+      #Go with this^^ as prob of being on-task  
+
+list_numbers <- c(5,10,15,20,25,30)
+
+list_prob_on_task <- c(1-inv_logit_scaled(x+log(0.88)*5), 1-inv_logit_scaled(x+log(0.88)*10), 1-inv_logit_scaled(x+log(0.88)*15), 1-inv_logit_scaled(x+log(0.88)*20), 1-inv_logit_scaled(x+log(0.88)*25), 1-inv_logit_scaled(x+log(0.88)*30))
+
+#Finding confidence intervals 
+list_ci_on_task_high <- c(1-inv_logit_scaled(x+log(0.82)*5), 1-inv_logit_scaled(x+log(0.82)*10), 1-inv_logit_scaled(x+log(0.82)*15), 1-inv_logit_scaled(x+log(0.82)*20), 1-inv_logit_scaled(x+log(0.82)*25), 1-inv_logit_scaled(x+log(0.82)*30))
+
+list_ci_on_task_low <- c(1-inv_logit_scaled(x+log(0.94)*5), 1-inv_logit_scaled(x+log(0.94)*10), 1-inv_logit_scaled(x+log(0.94)*15), 1-inv_logit_scaled(x+log(0.94)*20), 1-inv_logit_scaled(x+log(0.94)*25), 1-inv_logit_scaled(x+log(0.94)*30))
+
+#Making dataframe 
+df_prop_on_task <- data.frame(list_numbers,list_prob_on_task, list_ci_on_task_low, list_ci_on_task_high)
+
+#Finding a standard deviation that fits
+
+x <- seq(0, 5, by= .1)
+y <- dnorm(x, mean = 1.2, sd = 0.2)
+df <- data.frame(x,y)
+ggplot(df, aes(x,y))+ 
+  geom_line()
+
+#Adding sd to df 
+df_prop_on_task$list_of_sd <- c(0.002, 0.007, 0.012, 0.02, 0.03, 0.07) 
+```
+
+
+```{r}
+#Probability of disruptions or noise affecting attention 
+
+x <- 5
+
+b <- 0.89
+  #0.89 is a lot for 30, but 100-11 (11% is the increase pr increment) is 89, and can be argued to fit. See what happens. I took the most conservative effect of off-task behavior 
+
+list_disruptions_mean <- c(
+  1-inv_logit_scaled(x+log(b)*5),
+  1-inv_logit_scaled(x+log(b)*10),
+  1-inv_logit_scaled(x+log(b)*15),
+  1-inv_logit_scaled(x+log(b)*20),
+  1-inv_logit_scaled(x+log(b)*25),
+  1-inv_logit_scaled(x+log(b)*30))
+
+q <- 0.98
+  #100-2 = ^^ 
+list_ci_disruptions_low <- c(
+  1-inv_logit_scaled(x+log(q)*5),
+  1-inv_logit_scaled(x+log(q)*10),
+  1-inv_logit_scaled(x+log(q)*15),
+  1-inv_logit_scaled(x+log(q)*20),
+  1-inv_logit_scaled(x+log(q)*25),
+  1-inv_logit_scaled(x+log(q)*30))
+
+
+w <- 0.79
+  #100-21 = ^^ 
+list_ci_disruptions_high <- c(
+  1-inv_logit_scaled(x+log(w)*5),
+  1-inv_logit_scaled(x+log(w)*10),
+  1-inv_logit_scaled(x+log(w)*15),
+  1-inv_logit_scaled(x+log(w)*20),
+  1-inv_logit_scaled(x+log(w)*25),
+  1-inv_logit_scaled(x+log(w)*30))
+
+#Making dataframe 
+df_prop_disruptions <- data.frame(list_numbers, list_disruptions_mean, list_ci_disruptions_low, list_ci_disruptions_high)
+
+#Creating sd of the disruptions 
+
+x <- seq(0, 100, by= .1)
+y <- dnorm(x, mean = 18.18, sd = 7)
+#y <- dlnorm(x, meanlog = 0.18, sdlog = 0.9)
+df <- data.frame(x,y)
+ggplot(df, aes(x,y))+ 
+  geom_line()
+
+#Adding sd to df 
+df_prop_disruptions$list_of_sd <- c(0.003, 0.0045, 0.1, 0.2, 0.4, 0.7) 
+
+```
+
