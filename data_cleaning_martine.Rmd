@@ -133,17 +133,57 @@ ggplot(df_at, aes(x = NumberOfStudents, y = Knowledge_percent, color = Attainmen
 
 #Plotting knowledge percent 
 ggplot(df, aes(x = Knowledge_percent)) +
-  geom_histogram(bins= 7) 
+  stat_bin(bins = 20)+
+  stat_bin(bins= 20, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) + 
+  scale_y_continuous(labels = percent_format())
 
-ggplot(df, aes(x = Knowledge_percent, group = Version) +  
-  geom_bar(aes(y = ..count.., fill = factor(..x..)), stat="count") +
-    geom_text(aes( label = scales::percent(..prop..),
-                   y= ..prop.. ), stat= "count", vjust = -.5) +
-    labs(y = "Percent", fill="knowledge_percent") +
-    facet_grid(~Version) +
-    scale_y_continuous(labels = scales::percent))
+  #If dividing by 20 and then adding 4 columns together we get almost exactly the same columns as in the 9.klasse afgangsprøve 
+    #15.05, 10+
+    #40.2, 7-9.99
+    #31.81, 4-6.99
+    #11.13, 2-3.99
+    #1.81, -2
 
-?geom_histogram
+#Number of bins
+x <- 20
+
+df %>% filter(NumberOfStudents == 5) %>% 
+  ggplot(aes(x = Knowledge_percent)) +
+    stat_bin(bins = x)+
+    stat_bin(bins= x, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) + 
+    scale_y_continuous(labels = percent_format())
+
+df %>% filter(NumberOfStudents == 10) %>% 
+  ggplot(aes(x = Knowledge_percent)) +
+    stat_bin(bins = x)+
+    stat_bin(bins= x, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) + 
+    scale_y_continuous(labels = percent_format())
+
+df %>% filter(NumberOfStudents == 15) %>% 
+  ggplot(aes(x = Knowledge_percent)) +
+    stat_bin(bins = x)+
+    stat_bin(bins= x, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) + 
+    scale_y_continuous(labels = percent_format())
+
+df %>% filter(NumberOfStudents == 20) %>% 
+  ggplot(aes(x = Knowledge_percent)) +
+    stat_bin(bins = x)+
+    stat_bin(bins= x, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) + 
+    scale_y_continuous(labels = percent_format())
+
+df %>% filter(NumberOfStudents == 25) %>% 
+  ggplot(aes(x = Knowledge_percent)) +
+    stat_bin(bins = x)+
+    stat_bin(bins= x, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) + 
+    scale_y_continuous(labels = percent_format())
+
+df %>% filter(NumberOfStudents == 30) %>% 
+  ggplot(aes(x = Knowledge_percent)) +
+    stat_bin(bins = x)+
+    stat_bin(bins= x, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) + 
+    scale_y_continuous(labels = percent_format())
+
+
 ```
 
 
