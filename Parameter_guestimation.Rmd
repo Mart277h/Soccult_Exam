@@ -75,11 +75,12 @@ df_prop_on_task <- data.frame(list_numbers,list_prob_on_task, list_ci_on_task_lo
 
 #Finding a standard deviation that fits
 
-x <- seq(0, 5, by= .1)
-y <- dnorm(x, mean = 1.2, sd = 0.2)
+x <- seq(0, 100, by= .1)
+y <- dnorm(x, 23, 27)
 df <- data.frame(x,y)
 ggplot(df, aes(x,y))+ 
   geom_line()
+
 
 #Adding sd to df 
 df_prop_on_task$list_of_sd <- c(0.002, 0.007, 0.012, 0.02, 0.03, 0.07) 
