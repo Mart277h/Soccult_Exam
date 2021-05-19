@@ -1,0 +1,35 @@
+---
+title: "SA_analysis_roll"
+author: "Sarah Hvid Andersen"
+date: "17/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(tidyverse,
+               lme4,
+               stats)
+```
+
+
+```{r}
+df <- read_csv("abm_roll_eval.csv")
+folkeskolen <- read.csv("folkeskolen_stats.csv")
+
+df <- df %>% mutate(Version = as.factor(Version),
+                    NumberOfStudents = as.factor(NumberOfStudents),
+                    Ticks = as.factor(Ticks),
+                    ID = as.factor(ID))
+
+```
+
+
+
+```{r}
+
+
+
+```
+
