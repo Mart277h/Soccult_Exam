@@ -1,0 +1,106 @@
+---
+title: "Model validation"
+author: "Martine Lind Jensen"
+date: "20/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Loading packages
+pacman::p_load(tidyverse, lme4)
+
+#Reading data 
+mv_df <- read_csv("abm_verfication2.csv") %>% rename(Knowledge_Tick = Knowledge_percent)
+
+stats <- read_csv("folkeskolen_stats.csv")
+```
+
+As our model spans from a max attained knowledge to a min attained knowledge, this would be the same as min = -3 max = 12. Though, the Danish grade 12 does not mean the maximum amount you can learn, therefore, we put
+```{r}
+#Maximum attained knowledge = 12 we set to 10200(as you can be better than 12, but you cant be worse than -3) It is also more than 2 sd away from the mean (can be argumented to be outliers)
+max_k <- 10200 #max(mv_df$End_knowledge)
+
+    #mean(mv_df_grade$End_knowledge) + 2 * sd(mv_df_grade$End_knowledge)
+
+#Minimum attained knowledge = -3, we set to 2000, to keep the same scale in all (more than 3sd away - the minimum amount of knowledge)
+min_k <- 2000 #min(mv_df$End_knowledge)
+
+    #(mean(mv_df_grade$End_knowledge) + 3 * sd(mv_df_grade$End_knowledge)) - 1322.5
+
+#Finding difference
+diff <- max_k-min_k
+
+#Difference divided by 1500 should give us what 0.01 increment in 7-step grade should be
+inc <- diff/1500
+
+#Making a grade for each student based on their end_knowledge 
+  #If larger than 12, give 12
+mv_df_grade <- mv_df %>% dplyr::rowwise() %>% 
+  mutate(Grade = round((((End_knowledge-min_k)/inc)-300)/100, 2)) %>% mutate(Grade = ifelse(Grade > 12, 12, Grade)) %>% mutate(Grade = ifelse(Grade < -3, -3, Grade))
+```
+
+Plotting data 
+```{r}
+#Plotting 
+mv_df_grade %>% ggplot(aes(x = Grade)) + 
+  stat_bin(bins = 30)+
+  stat_bin(bins= 30, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) +
+  scale_y_continuous(labels = scales::percent_format()) + 
+  ggtitle("Grade distribution from knowledge percent")
+    #Looks good 
+
+mv_df_grade %>% ggplot(aes(x= Grade)) +
+  geom_density()
+```
+
+Stats
+```{r}
+#Run some summaries 
+summary(mv_df_grade$Grade)
+
+#Dividing into the same distribution as folkeskolen stats
+under2 <- mv_df_grade %>% filter(Grade < 2) %>% nrow() / nrow(mv_df_grade) *100
+twofour <- mv_df_grade %>% filter(Grade >= 2 & Grade < 4) %>% nrow() / nrow(mv_df_grade)*100
+fourseven <- mv_df_grade%>% filter(Grade >= 4 & Grade < 7) %>% nrow() / nrow(mv_df_grade)*100
+seventen <- mv_df_grade %>% filter(Grade >= 7 & Grade < 10) %>% nrow() / nrow(mv_df_grade)*100
+overten <- mv_df_grade %>% filter(Grade >= 10 ) %>% nrow() / nrow(mv_df_grade)*100
+
+df_12 <- mv_df_grade %>% filter(Grade == 12) %>% nrow() / nrow(mv_df_grade)*100
+  #Under 1 percent gets clean 12
+```
+
+
+Calculating grades from knowledge pr tick instead. Follow same procedure. 
+
+```{r}
+#Maximum attained knowledge = 12 we set to 10200(as you can be better than 12, but you cant be worse than -3) It is also more than 2 sd away from the mean (can be argumented to be outliers)
+max_kt <- 0.8878 #max(mv_df$Knowledge_Tick)
+
+    #mean(mv_df_grade$Knowledge_Tick) + 2 * sd(mv_df_grade$Knowledge_Tick)
+
+#Minimum attained knowledge = -3, we set to 2000, to keep the same scale in all (more than 3sd away - the minimum amount of knowledge)
+min_kt <- 0.1748042 #min(mv_df$Knowledge_Tick)
+
+    (mean(mv_df_grade$End_knowledge) + 3 * sd(mv_df_grade$End_knowledge)) - 1322.5
+
+#Finding difference
+diffkt <- max_kt-min_kt
+
+#Difference divided by 1500 should give us what 0.01 increment in 7-step grade should be
+inckt <- diffkt/1500
+
+#Making a grade for each student based on their end_knowledge 
+  #If larger than 12, give 12
+mv_df_grade <- mv_df_grade %>% dplyr::rowwise() %>% 
+  mutate(Grade_kt = round((((Knowledge_Tick-min_kt)/inckt)-300)/100, 2)) %>% mutate(Grade_kt = ifelse(Grade_kt > 12, 12, Grade_kt)) %>% mutate(Grade_kt = ifelse(Grade_kt < -3, -3, Grade_kt))
+
+#Are grade_kt different from grade?
+mv_df_grade$diff <- mv_df_grade$Grade-mv_df_grade$Grade_kt
+
+diff_grades <- mv_df_grade %>% filter(diff != 0) #%>% nrow() / nrow(mv_df_grade)*100
+
+mean(mv_df_grade$Grade_kt)
+```
+
