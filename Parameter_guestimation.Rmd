@@ -12,7 +12,7 @@ pacman::p_load(tidyverse, boot,brms)
 ```
 
 
-##Baseline attention 
+Creating parameter baseline attention 
 
 ```{r}
 #86 is the total on-task behavior in primary school, 80 is for secondary school
@@ -45,7 +45,7 @@ ggplot(rt, aes(t))+
 
 ```
 
-
+Estimating the intercept to find the the probability for each class size and deciding mean for probability of being on-task 
 ```{r}
 #For probability of being on-task 
 
@@ -72,11 +72,15 @@ list_ci_on_task_low <- c(1-inv_logit_scaled(x+log(0.94)*5), 1-inv_logit_scaled(x
 
 #Making dataframe 
 df_prop_on_task <- data.frame(list_numbers,list_prob_on_task, list_ci_on_task_low, list_ci_on_task_high)
+```
 
-#Finding a standard deviation that fits
+Trying first with normal distribution for probability of being on-task
 
+```{r}
+#Finding a standard deviation that fits for a normal distribution 
+  #Running this for every mean
 x <- seq(0, 100, by= .1)
-y <- dnorm(x, 23, 27)
+y <- dnorm(x, 23, 0.07)
 df <- data.frame(x,y)
 ggplot(df, aes(x,y))+ 
   geom_line()
@@ -86,6 +90,41 @@ ggplot(df, aes(x,y))+
 df_prop_on_task$list_of_sd <- c(0.002, 0.007, 0.012, 0.02, 0.03, 0.07) 
 ```
 
+
+Now trying to find a gamma distribution that fits better with the confidence intervals 
+
+```{r}
+#Did not succeed, trying all kinds of different things. We are going with normal distributions.
+mean <- 0.23
+
+sd <- 0.60
+
+#a <- mean^2/sd
+
+#b <- sd/mean
+
+alpha = mean * mean / sd
+
+lambda = 1 / (sd / mean)
+
+x <- seq(0, 100, by= .1)
+y <- rgamma(100, shape = alpha, scale = lambda)
+plot(y)
+df <- data.frame(y)
+ggplot(df, aes(y))+ 
+  geom_histogram(bins = 30)
+?dgamma
+
+y <- qpois(x, 23)
+
+log(0.88)
+y <- log(rnorm(x, 0.88, 10))
+```
+
+
+
+
+This is experimental and not used in the model
 
 ```{r}
 #Probability of disruptions or noise affecting attention 
@@ -140,4 +179,6 @@ ggplot(df, aes(x,y))+
 df_prop_disruptions$list_of_sd <- c(0.003, 0.0045, 0.1, 0.2, 0.4, 0.7) 
 
 ```
+
+
 
