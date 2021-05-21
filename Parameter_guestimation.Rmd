@@ -91,39 +91,6 @@ df_prop_on_task$list_of_sd <- c(0.002, 0.007, 0.012, 0.02, 0.03, 0.07)
 ```
 
 
-Now trying to find a gamma distribution that fits better with the confidence intervals 
-
-```{r}
-#Did not succeed, trying all kinds of different things. We are going with normal distributions.
-mean <- 0.23
-
-sd <- 0.60
-
-#a <- mean^2/sd
-
-#b <- sd/mean
-
-alpha = mean * mean / sd
-
-lambda = 1 / (sd / mean)
-
-x <- seq(0, 100, by= .1)
-y <- rgamma(100, shape = alpha, scale = lambda)
-plot(y)
-df <- data.frame(y)
-ggplot(df, aes(y))+ 
-  geom_histogram(bins = 30)
-?dgamma
-
-y <- qpois(x, 23)
-
-log(0.88)
-y <- log(rnorm(x, 0.88, 10))
-```
-
-
-
-
 This is experimental and not used in the model
 
 ```{r}
