@@ -53,7 +53,7 @@ test_data = read_data("Students_output/output2021-05-13_171337-0.csv")
     #it works
 
 # now we can apply it to the files we want to collect into one datafram
-df_1 <- list.files(path = 'data_abm_output/students_output_2nd_roll_eval/', pattern = '.csv', all.files = T, full.names = T) %>% 
+df_1 <- list.files(path = 'data_abm_output/students_output_subhyp/', pattern = '.csv', all.files = T, full.names = T) %>% 
     purrr::map_df(read_data)
 
 #correcting ID now that it is one big df
@@ -66,12 +66,8 @@ df <- df_1 %>%
   mutate(
   ID = as.factor(ID))
 
-
-
-# correct the knowledge calculation so that we have scaled knowledge and grades
-
   #Knowledge pr tick (grades used for hypothesis 2)
-df$Knowledge_Tick <-  df$End_knowledge / max(df$End_knowledge)
+df$Knowledge_Tick <-  df$End_knowledge / df$Ticks
 
 #Maximum attained knowledge = 12 we set to 10200(as you can be better than 12, but you cant be worse than -3) It is also more than 2 sd away from the mean (can be argumented to be outliers)
 max_kt <- 0.8878 #max(mv_df$Knowledge_Tick)
@@ -95,7 +91,9 @@ df <- df %>% dplyr::rowwise() %>%
   mutate(Grade_kt = round((((Knowledge_Tick-min_kt)/inckt)-300)/100, 2)) %>% mutate(Grade_kt = ifelse(Grade_kt > 12, 12, Grade_kt)) %>% mutate(Grade_kt = ifelse(Grade_kt < -3, -3, Grade_kt))
 
 
-# save the full dataset as a csv file
-#write_csv(df, 'roll_eval2.csv')
+# save the full dataset as a csv file to the correct folder
+write.csv(df, "data_csv/abm_subhyp.csv")
+
+
 ```
 
