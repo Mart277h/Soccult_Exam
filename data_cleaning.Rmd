@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 pacman::p_load(tidyverse, 
                fs, 
                purrr)
+
 ```
 
 
@@ -26,7 +27,7 @@ read_data <- function(filename) {
     
     for (file in filename){
     Date = substr(files, 7, 16)
-    Version = substr(files, 18, 26)
+    Version = substr(files, 18, 30)
     }
     
     # creating dataframes, loading data and merging the df's
@@ -52,56 +53,28 @@ test_data = read_data("Students_output/output2021-05-13_171337-0.csv")
     #it works
 
 # now we can apply it to the files we want to collect into one datafram
-df_1 <- list.files(path = 'Students_output/', pattern = '.csv', all.files = T, full.names = T) %>% 
+df_1 <- list.files(path = 'data_abm_output/students_output_2nd_roll_eval/', pattern = '.csv', all.files = T, full.names = T) %>% 
     purrr::map_df(read_data)
 
 #correcting ID now that it is one big df
   # there should always be as many Id's as observations in the dataframe
 df <- df_1 %>%
   select(-ID) %>% 
-  rename(ID = id) %>% 
+  dplyr::rename(ID = id) %>% 
   mutate(
   ID = as.numeric(ID)) %>% 
   mutate(
   ID = as.factor(ID))
+
+
+
+# correct the knowledge calculation so that we have scaled knowledge and grades
   
 
+df$Knowledge_percent <-  df$End_knowledge / max(df$End_knowledge)
+
+
 # save the full dataset as a csv file
-#write_csv(abm_data, 'abm_data.csv')
+#write_csv(df, 'roll_eval2.csv')
 ```
-
-
-calculating the percentage learned and getting some summary statistics
-
-```{r}
-
-df$Knowledge_percent <-  df$End_knowledge / df$Ticks
-
-sum_stats <- df %>% 
-  split(df$NumberOfStudents) %>% 
-  map(summary) 
-
-sum_stats
-
-df <- df %>% dplyr::group_by(Version)
-
-df %>% summarise(
-  Baseline.attention = mean(Baseline.attention)
-)
-```
-
-
-plots
-
-```{r}
-
-ggplot(df, aes(x = NumberOfStudents, y = Knowledge_percent, fill = NumberOfStudents)) +
- geom_bar(stat = "summary", fun.y = mean)+
-  geom_errorbar(stat = "summary", fun.data = mean_se)
-
-df %>% ggplot(aes(x = Baseline.attention, y = Version)) + geom_point(aes(color = Version))
-df %>% ggplot(aes(x = Baseline.attention)) + geom_histogram() + facet_wrap(.~ Version)
-
-```
-
 
