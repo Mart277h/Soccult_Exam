@@ -69,9 +69,30 @@ df <- df_1 %>%
 
 
 # correct the knowledge calculation so that we have scaled knowledge and grades
-  
 
-df$Knowledge_percent <-  df$End_knowledge / max(df$End_knowledge)
+  #Knowledge pr tick (grades used for hypothesis 2)
+df$Knowledge_Tick <-  df$End_knowledge / max(df$End_knowledge)
+
+#Maximum attained knowledge = 12 we set to 10200(as you can be better than 12, but you cant be worse than -3) It is also more than 2 sd away from the mean (can be argumented to be outliers)
+max_kt <- 0.8878 #max(mv_df$Knowledge_Tick)
+
+    #mean(mv_df_grade$Knowledge_Tick) + 2 * sd(mv_df_grade$Knowledge_Tick)
+
+#Minimum attained knowledge = -3, we set to 2000, to keep the same scale in all (more than 3sd away - the minimum amount of knowledge)
+min_kt <- 0.1748042 #min(mv_df$Knowledge_Tick)
+
+    #(mean(mv_df_grade$End_knowledge) + 3 * sd(mv_df_grade$End_knowledge)) - 1322.5
+
+#Finding difference
+diffkt <- max_kt-min_kt
+
+#Difference divided by 1500 should give us what 0.01 increment in 7-step grade should be
+inckt <- diffkt/1500
+
+#Making a grade for each student based on their end_knowledge 
+  #If larger than 12, give 12
+df <- df %>% dplyr::rowwise() %>% 
+  mutate(Grade_kt = round((((Knowledge_Tick-min_kt)/inckt)-300)/100, 2)) %>% mutate(Grade_kt = ifelse(Grade_kt > 12, 12, Grade_kt)) %>% mutate(Grade_kt = ifelse(Grade_kt < -3, -3, Grade_kt))
 
 
 # save the full dataset as a csv file
