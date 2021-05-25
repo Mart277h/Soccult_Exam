@@ -1,0 +1,92 @@
+---
+title: "Hypothesis testing"
+author: "Martine Lind Jensen"
+date: "21/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(tidyverse, lme4)
+
+df <- read_csv("data_csv/abm_subhyp.csv")
+
+df <- df %>% mutate(NumberOfStudents = as.factor(NumberOfStudents), 
+                    Ticks = as.factor(Ticks)) %>% group_by(NumberOfStudents)
+
+df_sub <- read_csv("data_csv/abm_big_verification.csv")
+
+df_sub <- df_sub %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% group_by(NumberOfStudents)
+
+df_sub <- df_sub %>% mutate(Attainment = ifelse(Baseline.attention < 0.71, "Low", ifelse(Baseline.attention >= 0.71, "High", "no"))) %>% mutate(Attainment = as.factor(Attainment))
+  #0.71 because that is approximately 20% lowest baseline attention 
+```
+
+Hypothesis 2, how can class size affect learning
+
+```{r}
+#Plots
+
+#This model shows end knowledge per class size hyp 2
+df %>% ggplot(aes(x = End_knowledge, fill = NumberOfStudents)) + 
+  geom_density(alpha = 0.5) +
+  theme_classic() + 
+  ggtitle("End knowledge for class sizes") +
+  xlab("End Knowledge") + 
+  ylab("Density")
+
+
+#This model shows end knowledge per tick per class size hyp 2
+df %>% ggplot(aes(x = Knowledge_Tick, fill = NumberOfStudents)) + 
+  geom_density(alpha = 0.5) +
+  theme_classic() + 
+  ggtitle("Knowledge per tick for class sizes") +
+  xlab("Knowledge per tick") + 
+  ylab("Density")
+```
+
+```{r}
+#Stats hyp 2
+
+#Models
+summary(lm(End_knowledge ~ 0 + NumberOfStudents, df))
+  #This model shows that end_knowledge significantly is predicted by number of students with beta == mean
+  #mean(df$End_knowledge[df$NumberOfStudents == "30"])
+  #And shows that with comparatively less time students in 20 students class gets more knowledge than in 30, it is the mean end knowledge per student 
+summary(lm(Knowledge_Tick ~ 0 + NumberOfStudents, df))
+  #This models shows that from 15 students and up they learn significantly less per tick 
+```
+
+Subhypothesis. Students with lower baseline attention learns less in big classes compared to small classes. 
+
+```{r}
+#If plotting by end knowledge we see something, the slope for 30 students seem steeper than the others 
+df %>%  ggplot(aes(x = Baseline.attention, y = End_knowledge, color = NumberOfStudents, fill = NumberOfStudents)) + 
+  #geom_smooth() +
+  geom_point() +
+  theme_classic() + 
+  ggtitle("Baseline attention effect by class size on end knowledge") + 
+  xlab("Baseline Attention") + 
+  ylab("End Knowledge")
+
+  #This plots shows that for the classes doing 11490 ticks, you can see that the slope is steeper, so that a low baseline attention = lower end knowledge for bigger classes 
+
+#Plot accounting for time with new dataset 
+df_sub %>%  ggplot(aes(x = NumberOfStudents, y = End_knowledge, color = NumberOfStudents, fill = NumberOfStudents)) + 
+  geom_bar(stat = "summary") +
+  geom_errorbar(stat = "summary", color = "black") +
+  theme_classic() + 
+  ggtitle("Attainment effect by class size on end knowledge") + 
+  xlab("Number of Students") + 
+  ylab("End Knowledge") + 
+  facet_wrap(.~Attainment)
+
+  #The effect is now not there, so it seems like that lower baseline students is affected by amount of time spend in school in the larger classes, such that it is the larger classes and the longer time that affects the low baseline students more than it is only the larger classes
+```
+
+
+```{r}
+#This model shows no significant difference of high and low attaining students 
+summary(lm(End_knowledge ~ 1 + NumberOfStudents*Attainment, df_sub))
+```
