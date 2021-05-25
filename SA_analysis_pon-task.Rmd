@@ -1,0 +1,269 @@
+---
+title: "SA_analysis_pon_task"
+author: "Martine Lind Jensen"
+date: "17/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(tidyverse, brms, lme4)
+```
+
+```{r}
+pont_eval <- read_csv("data_csv/abm_pon-task_eval.csv")
+abm_frozen <- read_csv("data_csv/abm_verification_2nd.csv")
+
+pont_eval <- pont_eval %>% mutate(Knowledge_tick = Knowledge_percent)
+```
+
+Stats
+
+```{r}
+#Scaling such that they can be evaluated 
+pe_scale <- pont_eval %>% mutate(pon.task_mean = rescale(pon.task_mean, to = c(-1,1)), 
+                          pon.task_sd = rescale(pon.task_sd, to = c(-1,1)), 
+                          Baseline.attention = rescale(Baseline.attention, to = c(-1,1)))
+#Running models for paper 
+summary(lm(Knowledge_tick ~ pon.task_mean, pe_scale))
+summary(lm(Knowledge_tick ~ pon.task_sd, pe_scale))
+summary(lm(Knowledge_tick ~ Baseline.attention, pe_scale))
+```
+
+
+
+Plots (we dont use any of them)
+```{r}
+pont_eval <- pont_eval %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% group_by(NumberOfStudents) #%>% mutate(pon.task_mean = as.factor(pon.task_mean))
+
+abm_frozen <- abm_frozen %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% group_by(NumberOfStudents) %>% mutate(pon.task = ifelse(NumberOfStudents == "5", 0.0127, ifelse(NumberOfStudents == "10", 0.024, ifelse(NumberOfStudents == "15", 0.044, ifelse(NumberOfStudents == "20", 0.08, ifelse(NumberOfStudents == "25", 0.14, ifelse(NumberOfStudents == "30", 0.238, "no")))))))
+
+pont_eval %>% ggplot(aes(x= pon.task_mean, y = Knowledge_tick, color = NumberOfStudents)) + 
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_classic() + 
+  #geom_point() + 
+  stat_summary(aes(x= pon.task, y = Knowledge_Tick, color = NumberOfStudents), data = abm_frozen, fun = "mean")#+ 
+  ggtitle("End knowledge for class sizes") +
+  xlab("End Knowledge") + 
+  ylab("Density")#
+  
+pont_eval %>% filter(NumberOfStudents == 30 | NumberOfStudents == 15) %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% group_by(NumberOfStudents) %>% ggplot(aes(x= pon.task_mean, y = Knowledge_tick, color = NumberOfStudents)) + 
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_classic()
+```
+
+
+
+#ONLY EXPLORATORY 
+```{r}
+pont_eval %>% 
+  ggplot(aes(x = Knowledge_percent, y = pon.task_mean, color = Knowledge_percent)) +
+  geom_point()+ 
+  #geom_jitter() + 
+  facet_wrap(.~ NumberOfStudents)
+
+pont_eval %>% ggplot(aes(x = Knowledge_percent, y = NumberOfStudents, color = pon.task_mean)) +
+  geom_jitter()
+
+pont_eval %>% filter(NumberOfStudents == 5) %>% ggplot(aes(x = pon.task_mean, y = pon.task_sd, color = Knowledge_percent)) +
+  scale_color_continuous(type = "viridis") + 
+  geom_jitter()+ 
+  facet_wrap(.~round(Baseline.attention, 1)) 
+
+pont_eval %>% filter(NumberOfStudents == 10) %>% ggplot(aes(x = pon.task_mean, y = pon.task_sd, color = Knowledge_percent)) +
+  scale_color_continuous(type = "viridis") + 
+  geom_jitter()+ 
+  facet_wrap(.~round(Baseline.attention, 1)) 
+
+pont_eval %>% filter(NumberOfStudents == 15) %>% ggplot(aes(x = pon.task_mean, y = pon.task_sd, color = Knowledge_percent)) +
+  scale_color_continuous(type = "viridis") + 
+  geom_jitter()+ 
+  facet_wrap(.~round(Baseline.attention, 1)) 
+
+pont_eval %>% filter(NumberOfStudents == 20) %>% ggplot(aes(x = pon.task_mean, y = pon.task_sd, color = Knowledge_percent)) +
+  scale_color_continuous(type = "viridis") + 
+  geom_jitter()+ 
+  facet_wrap(.~round(Baseline.attention, 1)) 
+
+pont_eval %>% filter(NumberOfStudents == 25) %>% ggplot(aes(x = pon.task_mean, y = pon.task_sd, color = Knowledge_percent)) +
+  scale_color_continuous(type = "viridis") + 
+  geom_jitter()+ 
+  facet_wrap(.~round(Baseline.attention, 1)) 
+
+pont_eval %>% filter(NumberOfStudents == 30) %>% ggplot(aes(x = pon.task_mean, y = pon.task_sd, color = Knowledge_percent)) +
+  scale_color_continuous(type = "viridis") + 
+  geom_jitter()+ 
+  facet_wrap(.~round(Baseline.attention, 1)) 
+
+```
+
+
+
+```{r}
+pont_eval %>% filter(pon.task_mean < 0.15) %>%  
+  ggplot(aes(x = Knowledge_percent))+
+  geom_histogram(bins=20) +
+  #geom_errorbar(stat = "summary", fun.data = mean_se)#+ 
+  facet_grid(pon.task_mean ~ pon.task_sd)
+
+
+pont_eval %>% filter(pon.task_mean >= 0.15) %>% 
+  ggplot(aes(x = Knowledge_percent))+
+  geom_histogram(bins = 20) +
+  #geom_errorbar(stat = "summary", fun.data = mean_se)#+ 
+  facet_grid(pon.task_mean ~ pon.task_sd)
+
+
+pont_eval %>% filter(pon.task_mean < 0.24) %>% 
+  ggplot(aes(x = Knowledge_percent))+
+  geom_histogram(bins=20) +
+  #geom_errorbar(stat = "summary", fun.data = mean_se)#+ 
+  facet_grid(pon.task_mean ~ NumberOfStudents)
+
+
+
+peval_mean <- pont_eval %>% group_by(NumberOfStudents, pon.task_mean) %>% summarise(Knowledge_percent = mean(Knowledge_percent), NumberOfStudents = mean(NumberOfStudents))
+
+pont_eval %>% filter(NumberOfStudents== 30) %>% filter(NumberOfStudents == 25 & pon.task_mean == 0.14)%>% 
+  ggplot(aes(x = NumberOfStudents, y = Knowledge_percent)) +
+  geom_bar(stat = "summary", fun.y = mean) +
+  geom_errorbar(stat = "summary", fun.data = mean_se)+
+  facet_wrap(.~pon.task_mean)
+  
+#geom_errorbar(stat = "summary", fun.data = mean_se)+ 
+```
+
+```{r}
+#Stepwise leave one out factor thingy thingy 
+
+  #Making dataframes with original data with the set distributions 
+
+
+#5-10
+stu5 <- abm_frozen %>% filter(NumberOfStudents == 5) %>% mutate(Condition = "frozen", 
+                                                                pon.task_mean = 0.012, 
+                                                                pon.task_sd = 0.002, 
+                                                                )
+
+stu10_pon <- pont_eval %>% filter(NumberOfStudents == 10) %>% mutate(Condition = "eval")
+
+stu10_eval <- rbind(stu5, stu10_pon) 
+
+  #Plot
+stu10_eval %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% ggplot(aes(x = pon.task_mean, y = Knowledge_percent, fill = NumberOfStudents)) +
+  geom_bar(stat = "summary", fun = mean) +
+  geom_errorbar(stat = "summary", fun.data = mean_se)
+
+#10-15
+
+stu10 <- abm_frozen %>% filter(NumberOfStudents == 10) %>% mutate(Condition = "frozen", 
+                                                                pon.task_mean = 0.024, 
+                                                                pon.task_sd = 0.007)
+
+stu15_pon <- pont_eval %>% filter(NumberOfStudents == 15) %>% mutate(Condition = "eval")
+
+stu15_eval <- rbind(stu10, stu15_pon) 
+
+  #Plot
+stu15_eval %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% ggplot(aes(x = pon.task_mean, y = Knowledge_percent, fill = NumberOfStudents)) +
+  geom_bar(stat = "summary", fun = mean) +
+  geom_errorbar(stat = "summary", fun.data = mean_se)
+
+#15-20
+
+stu15 <- abm_frozen %>% filter(NumberOfStudents == 15) %>% mutate(Condition = "frozen", 
+                                                                pon.task_mean = 0.044, 
+                                                                pon.task_sd = 0.012)
+
+stu20_pon <- pont_eval %>% filter(NumberOfStudents == 20) %>% mutate(Condition = "eval")
+
+stu20_eval <- rbind(stu15, stu20_pon) 
+
+  #Plot
+stu20_eval %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% ggplot(aes(x = pon.task_mean, y = Knowledge_percent, fill = NumberOfStudents)) +
+  geom_bar(stat = "summary", fun = mean) +
+  geom_errorbar(stat = "summary", fun.data = mean_se)
+
+
+#20-25
+
+stu20 <- abm_frozen %>% filter(NumberOfStudents == 20) %>% mutate(Condition = "frozen", 
+                                                                pon.task_mean = 0.081, 
+                                                                pon.task_sd = 0.02)
+
+stu25_pon <- pont_eval %>% filter(NumberOfStudents == 25) %>% mutate(Condition = "eval")
+
+stu25_eval <- rbind(stu20, stu25_pon) 
+
+  #Plot
+stu25_eval %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% ggplot(aes(x = pon.task_mean, y = Knowledge_percent, fill = NumberOfStudents)) +
+  geom_bar(stat = "summary", fun = mean, width = 0.003) +
+  geom_errorbar(stat = "summary", fun.data = mean_se)
+
+
+#25-30
+stu25 <- abm_frozen %>% filter(NumberOfStudents == 25) %>% mutate(Condition = "frozen", 
+                                                                pon.task_mean = 0.14, 
+                                                                pon.task_sd = 0.03)
+
+stu30_pon <- pont_eval %>% filter(NumberOfStudents == 30) %>% mutate(Condition = "eval")
+
+stu30_eval <- rbind(stu25, stu30_pon) 
+
+#stu30 
+stu30 <- abm_frozen %>% filter(NumberOfStudents == 30) %>% mutate(Condition = "frozen", 
+                                                                pon.task_mean = 0.24, 
+                                                                pon.task_sd = 0.07)
+
+  #Plot
+stu30_eval %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% ggplot(aes(x = pon.task_mean, y = Knowledge_percent, fill = NumberOfStudents)) +
+  geom_bar(stat = "summary", fun = mean, width = 0.003) +
+  geom_errorbar(stat = "summary", fun.data = mean_se)
+
+
+#THIS ONE
+
+#For 25 against thirty 
+ggplot() +
+  geom_bar(data = stu30_pon, aes(x = pon.task_mean, y = Knowledge_percent), stat = "summary", fun = mean, width = 0.003) +
+  geom_errorbar(data = stu30_pon, aes(x = pon.task_mean, y = Knowledge_percent), stat = "summary", fun.data = mean_se, alpha = 0.5, width = 0.003) + 
+  geom_errorbar(data = stu25, aes(x = pon.task_mean, y = Knowledge_percent), stat = "summary", fun.data = mean_se, width = 0.05, color = "red") + 
+  geom_bar(data = stu30, aes(x = pon.task_mean, y = Knowledge_percent), stat = "summary", fun = mean, width = 0.003, fill = "lightblue", alpha = 0.5) + 
+  geom_errorbar(data = stu30, aes(x = pon.task_mean, y = Knowledge_percent), stat = "summary", fun.data = mean_se, width = 0.003, alpha = 0.5) +
+  ggtitle("Sensivity analysis of p on-task estimates for 30 students") + 
+  xlab("Different mean probabilities of being on-task") + 
+  ylab("Knowledge gained pr tick")
+```
+
+
+```{r}
+ggplot(stu_full, aes(x = pon.task_mean, y = Knowledge_percent)) +
+  geom_smooth(data = stu30_pon, aes(x = pon.task_mean, y = Knowledge_percent),method = "lm", color = "black") +
+  geom_point(data = stu25, aes(pon.task_mean, Knowledge_percent), stat = "summary", fun = mean, color = "black", size = 4) +
+  geom_smooth(data = stu25_pon, aes(x = pon.task_mean, y = Knowledge_percent),method = "lm", color = "blue")+
+    geom_point(data = stu20, aes(pon.task_mean, Knowledge_percent), stat = "summary", fun = mean, color = "red", size = 4) +
+  geom_smooth(data = stu20_pon, aes(x = pon.task_mean, y = Knowledge_percent),method = "lm", color = "red") +
+  geom_point(data = stu15, aes(pon.task_mean, Knowledge_percent), stat = "summary", fun = mean, color = "green", size = 4) +
+  geom_smooth(data = stu15_pon, aes(x = pon.task_mean, y = Knowledge_percent),method = "lm", color = "orange") +
+  geom_point(data = stu10, aes(pon.task_mean, Knowledge_percent), stat = "summary", fun = mean, color = "purple", size = 4)+
+  geom_smooth(data = stu10_pon, aes(x = pon.task_mean, y = Knowledge_percent),method = "lm", color = "yellow") + 
+  geom_point(data = stu5, aes(pon.task_mean, Knowledge_percent), stat = "summary", fun = mean, color = "grey", size = 4)
+```
+
+
+Running testing 
+```{r}
+
+stu_full <- rbind(stu30_eval, stu25_eval, stu20_eval, stu15_eval, stu10_eval)
+stu30_eval <- stu30_eval %>% mutate(Condition = as.factor(Condition))
+eval30c <- lm(Knowledge_percent ~ 1 + as.factor(pon.task_mean), stu30_eval)
+eval30 <- lm(Knowledge_percent ~ 1 + pon.task_mean*Condition, stu_full)
+summary(eval30c
+        )
+
+
+
+#Something like this? Seeing that there is a significant difference from 0.141 to 
+```
+
