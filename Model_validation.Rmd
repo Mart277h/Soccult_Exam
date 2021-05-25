@@ -32,12 +32,12 @@ max_k <- 10200 #max(mv_df$End_knowledge)
 #Minimum attained knowledge = -3, we set to 2000, to keep the same scale in all (more than 3sd away - the minimum amount of knowledge)
 min_k <- 2000 #min(mv_df$End_knowledge)
 
-    #(mean(mv_df_grade$End_knowledge) + 3 * sd(mv_df_grade$End_knowledge)) - 1322.5
+    #(mean(mv_df_grade$End_knowledge) - 3 * sd(mv_df_grade$End_knowledge)) - 1322.5
 
 #Finding difference
 diff <- max_k-min_k
 
-#Difference divided by 1500 should give us what 0.01 increment in 7-step grade should be
+#Difference divided by 15 should give us what 0.01 increment in 7-step grade should be
 inc <- diff/1500
 
 #Making a grade for each student based on their end_knowledge 
@@ -50,10 +50,10 @@ Plotting data
 ```{r}
 #Plotting 
 mv_df_grade %>% ggplot(aes(x = Grade)) + 
-  stat_bin(bins = 30)+
+  geom_histogram(bins = 30)+
   stat_bin(bins= 30, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) +
   scale_y_continuous(labels = scales::percent_format()) + 
-  ggtitle("Grade distribution from knowledge percent")
+  ggtitle("Grade distribution from first model validation")
     #Looks good 
 
 mv_df_grade %>% ggplot(aes(x= Grade)) +
@@ -99,7 +99,7 @@ mv_df_second %>% ggplot(aes(x = Grade)) +
   stat_bin(bins = 30)+
   stat_bin(bins= 30, geom="text", aes(label=round((..count..)/sum(..count..)*100, 2))) +
   scale_y_continuous(labels = scales::percent_format()) + 
-  ggtitle("Grade distribution from knowledge percent")
+  ggtitle("Grade distribution from second model validation")
     #Looks good 
 
 mv_df_second %>% ggplot(aes(x= Grade)) +
@@ -109,6 +109,8 @@ mv_df_second %>% ggplot(aes(x= Grade)) +
 #Creating stats dataframe
 Comparing the different models 
 ```{r}
+#Index 
+Grades <- c("Under 1.99", "2.00-3.99", "4.00-6.99", "7.00-9.99", "Over 10.00")
 #First stats 
 mv_first <- rbind(under2, twofour, fourseven, seventen, overten)
 
@@ -117,14 +119,22 @@ mv_second <- rbind(under2_2, twofour_2, fourseven_2, seventen_2, overten_2)
 
 #Folkeskole stats 
 folkeskolen_mean <- rbind(1.3, 9.29, 32.14, 41.29, 15.98) 
-folkeskolen_sd <- rbind(0.3, 0.89, 1.77, 1.77, 1.30)
+folkeskolen_sd <- rbind(0.3, 0.89, 1.77, 1.57, 1.30)
 
 #Making dataframe 
-stats_mv <- data.frame(folkeskolen_mean, folkeskolen_sd, mv_first, mv_second)
+stats_mv <- data.frame(Grades, folkeskolen_mean, folkeskolen_sd, mv_first, mv_second)
     #Looks so fine 
 
 #Error calculations 
-stats_mv <- stats_mv %>% dplyr::rowwise() %>%  mutate(Error_first = (folkeskolen_mean - mv_first)/folkeskolen_mean*100) %>% mutate(Error_second = (folkeskolen_mean - mv_second)/folkeskolen_mean*100)
+stats_mv <- stats_mv %>% dplyr::rowwise() %>%  
+  mutate(Error_first = round((folkeskolen_mean - mv_first)/folkeskolen_mean*100, 2)) %>% 
+  mutate(Error_second = round((folkeskolen_mean - mv_second)/folkeskolen_mean*100, 2)) %>% 
+  mutate(mv_first = round(mv_first, 2), 
+         mv_second = round(mv_second, 2)) 
+
+#Sum of error between the two validations
+sum(stats_mv$Error_first)
+sum(stats_mv$Error_second)
 
 m1 <- lm(folkeskolen_mean ~ mv_first, stats_mv)
 
@@ -133,12 +143,23 @@ m2 <- lm(folkeskolen_mean ~ mv_second, stats_mv)
 #Looks like model 2 is better (higher multiple r s-squared) explaining very much of the variance.
 summary(m1) 
 summary(m2)
+  
+#Model 2 explains most variance == better model 
+```
+
+```{r}
+#Plotting the two models against each other 
+
+mv_df_grade %>% ggplot(aes(x = Grade)) +
+  geom_density(fill = "lightblue") + 
+  geom_density(aes( x= Grade), mv_df_second, fill = "pink", alpha = 0.7) + 
+  ggtitle("First model validation against second model validation")
 ```
 
 
-##Creating grades from knowledge pr tick to hypothesis 2 
+##Creating grades from knowledge pr tick
 
-Calculating grades from knowledge pr tick instead. Follow same procedure. And comparing between grades.
+Calculating grades from knowledge pr tick instead. Follow same procedure. And comparing between grades, This is probably not necessary for the hypothesis.
 
 ```{r}
 #Maximum attained knowledge = 12 we set to 10200(as you can be better than 12, but you cant be worse than -3) It is also more than 2 sd away from the mean (can be argumented to be outliers)
@@ -175,4 +196,6 @@ grades_compare <- data.frame(mean(mv_df_grade$Grade_kt), mean(mv_df_grade$Grade)
 t.test(mv_df_grade$diff)
   #Yes though with a very small mean which we deem okay for further analysis in hypothesis 2
 ```
+
+
 
