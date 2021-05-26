@@ -1,7 +1,8 @@
 ---
 title: "Model validation"
 author: "Martine Lind Jensen"
-date: "20/5/2021"
+        "Sarah Hvid Andersen"
+date: "26/5/2021"
 output: html_document
 ---
 

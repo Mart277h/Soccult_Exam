@@ -1,7 +1,8 @@
 ---
 title: "SA_analysis_pon_task"
 author: "Martine Lind Jensen"
-date: "17/5/2021"
+        "Sarah Hvid Andersen"
+date: "26/5/2021"
 output: html_document
 ---
 
@@ -29,28 +30,6 @@ pe_scale <- pont_eval %>% mutate(pon.task_mean = rescale(pon.task_mean, to = c(-
 summary(lm(Knowledge_tick ~ pon.task_mean, pe_scale))
 summary(lm(Knowledge_tick ~ pon.task_sd, pe_scale))
 summary(lm(Knowledge_tick ~ Baseline.attention, pe_scale))
-```
-
-
-
-Plots (we dont use any of them)
-```{r}
-pont_eval <- pont_eval %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% group_by(NumberOfStudents) #%>% mutate(pon.task_mean = as.factor(pon.task_mean))
-
-abm_frozen <- abm_frozen %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% group_by(NumberOfStudents) %>% mutate(pon.task = ifelse(NumberOfStudents == "5", 0.0127, ifelse(NumberOfStudents == "10", 0.024, ifelse(NumberOfStudents == "15", 0.044, ifelse(NumberOfStudents == "20", 0.08, ifelse(NumberOfStudents == "25", 0.14, ifelse(NumberOfStudents == "30", 0.238, "no")))))))
-
-pont_eval %>% ggplot(aes(x= pon.task_mean, y = Knowledge_tick, color = NumberOfStudents)) + 
-  geom_smooth(method = "lm", se = FALSE) +
-  theme_classic() + 
-  #geom_point() + 
-  stat_summary(aes(x= pon.task, y = Knowledge_Tick, color = NumberOfStudents), data = abm_frozen, fun = "mean")#+ 
-  ggtitle("End knowledge for class sizes") +
-  xlab("End Knowledge") + 
-  ylab("Density")#
-  
-pont_eval %>% filter(NumberOfStudents == 30 | NumberOfStudents == 15) %>% mutate(NumberOfStudents = as.factor(NumberOfStudents)) %>% group_by(NumberOfStudents) %>% ggplot(aes(x= pon.task_mean, y = Knowledge_tick, color = NumberOfStudents)) + 
-  geom_smooth(method = "lm", se = FALSE) +
-  theme_classic()
 ```
 
 

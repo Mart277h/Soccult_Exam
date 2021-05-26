@@ -20,7 +20,6 @@ pacman::p_load(tidyverse,
 the data is in the folder students_output. we need to read in the data from each csv file within. 
 
 ```{r}
-
 read_data <- function(filename) {
     # getting filenames and subsetting the relevant parts
     files = path_file(path = filename) 
@@ -47,13 +46,16 @@ read_data <- function(filename) {
     
     return(data)
 }
+```
 
+
+```{r}
 # testing on one file
 test_data = read_data("Students_output/output2021-05-13_171337-0.csv")
     #it works
 
 # now we can apply it to the files we want to collect into one datafram
-df_1 <- list.files(path = 'data_abm_output/students_output_subhyp/', pattern = '.csv', all.files = T, full.names = T) %>% 
+df_1 <- list.files(path = 'data_abm_output/students_output_big_verification/', pattern = '.csv', all.files = T, full.names = T) %>% 
     purrr::map_df(read_data)
 
 #correcting ID now that it is one big df
@@ -89,10 +91,12 @@ inckt <- diffkt/1500
   #If larger than 12, give 12
 df <- df %>% dplyr::rowwise() %>% 
   mutate(Grade_kt = round((((Knowledge_Tick-min_kt)/inckt)-300)/100, 2)) %>% mutate(Grade_kt = ifelse(Grade_kt > 12, 12, Grade_kt)) %>% mutate(Grade_kt = ifelse(Grade_kt < -3, -3, Grade_kt))
+```
 
 
+```{r}
 # save the full dataset as a csv file to the correct folder
-write.csv(df, "data_csv/abm_subhyp.csv")
+write.csv(df, "data_csv/abm_big_verification.csv")
 
 
 ```

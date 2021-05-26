@@ -1,0 +1,129 @@
+---
+title: "SA_analysis_roll"
+author: "Sarah Hvid Andersen"
+        "Martine Lind Jensen"
+date: "26/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(tidyverse,
+               lme4,
+               stats,
+               scales)
+
+
+```
+
+
+```{r}
+df <- read_csv("data_csv/abm_1st_roll_eval.csv")
+
+
+df <- df %>% mutate(Version = as.factor(Version),
+                    NumberOfStudents = as.factor(NumberOfStudents),
+                    Ticks = as.factor(Ticks),
+                    ID = as.factor(ID))
+
+df <- df %>% mutate(Better_roll_scaled = rescale(Better_roll, to = c(-1,1)), 
+                    Worse_roll_scaled = rescale(Worse_roll, to = c(-1,1)))
+
+m1 <- lm(End_knowledge ~ Better_roll_scaled, df)
+m2 <- lm(End_knowledge ~ Worse_roll_scaled, df)
+
+summary(m1)
+summary(m2)
+
+```
+
+
+coefficient of variation 
+
+```{r}
+
+cv_function <- function(n) {
+  cv = sd(n) / mean(n)
+  
+  return(cv)
+}
+
+cv_function(df$Knowledge_percent)
+
+
+```
+
+
+plots 
+
+```{r}
+
+#Plotting knowledge percent 
+df %>% 
+  ggplot(aes(x = Knowledge_percent, y = NumberOfStudents, color = Knowledge_percent)) + 
+  geom_jitter() +
+  facet_grid(Better_roll ~ Worse_roll) +
+  ggtitle("Parameter space for better/worse roll")
+
+
+
+# nice comparison plot
+df %>% ggplot(aes(x = End_knowledge)) +
+  geom_histogram(bins = 20) +
+  facet_grid(Better_roll ~ Worse_roll) +
+  ggtitle("Parameter space for better and worse roll") +
+  labs(x = 'End knowledge', y = '') +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y=element_blank())
+
+
+
+df %>% ggplot(aes(x = Knowledge_percent, y = Baseline.attention)) +
+  geom_point(aes(color = Version)) +
+  facet_grid(Better_roll ~ Worse_roll) +
+  
+
+```
+
+sensitivity analysis part 2
+
+```{r}
+df <- read_csv('data_csv/roll_eval2.csv')
+
+df <- df %>% mutate(Better_roll_scaled = rescale(Better_roll, to = c(-1,1)), 
+                    Worse_roll_scaled = rescale(Worse_roll, to = c(-1,1)))
+
+# comparison plot
+df %>% ggplot(aes(x = Knowledge_Tick)) +
+  geom_histogram(bins = 20) +
+  facet_grid(Better_roll ~ Worse_roll) +
+  ggtitle("Parameter space for better/worse roll") +
+  labs(x = 'Knowledge pr tick', y = '') +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+
+
+df %>% ggplot(aes(x = Grade_kt)) +
+  geom_histogram(bins = 20) +
+  facet_grid(Better_roll ~ Worse_roll) +
+  ggtitle("Parameter space for better/worse roll") +
+  labs(x = 'grade', y = '') +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+
+# we go with 1.35 and 0.8 as this distribution approximates the real one the most. 
+
+m1 <- lm(End_knowledge ~ Better_roll_scaled, df)
+m2 <- lm(End_knowledge ~ Worse_roll_scaled, df)
+
+
+```
+
