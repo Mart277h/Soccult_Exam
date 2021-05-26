@@ -9,6 +9,19 @@ globals
 [
   ;NumberOfStudents
   Output_file
+  pon-task_mean5
+  pon-task_mean10
+  pon-task_mean15
+  pon-task_mean20
+  pon-task_mean25
+  pon-task_mean30
+
+  pon-task_sd5
+  pon-task_sd10
+  pon-task_sd15
+  pon-task_sd20
+  pon-task_sd25
+  pon-task_sd30
 ]
 
 breed [teachers teacher]
@@ -113,7 +126,7 @@ end
 ;----------------------------------------------------------------------------------------
 
 ;;;;;;;;;;;;;;;
-;;;;; GO ;;;;;;
+;;; GO ;;;;;;;;
 ;;;;;;;;;;;;;;;
 
 
@@ -142,16 +155,8 @@ to go
 
   ]
 
-  ;do-plots
-  tick
-  if NumberOfStudents <= 15 and ticks >= 5745
-  [
-  ;write-students-to-csv
-   create-output-file
-    export-results
-    stop
-  ]
-  if NumberOfStudents >= 20 and ticks >= 11490
+
+  if ticks >= 11490
   [
   ;write-students-to-csv
    create-output-file
@@ -163,12 +168,26 @@ end
 ;------------------------------------------------------
 
 to attend ; in this function we will take the estimates from the on-task behavior analysis from Blatchford et al 2011
-    if NumberOfStudents = 5 [set pon-task random-normal 0.013 0.002]
-    if NumberOfStudents = 10 [ set pon-task random-normal 0.024 0.007]
-    if NumberOfStudents = 15 [ set pon-task random-normal 0.044 0.012 ]
-    if NumberOfStudents = 20 [set pon-task random-normal 0.08 0.02]
-    if NumberOfStudents = 25 [set pon-task random-normal 0.14 0.03]
-    if NumberOfStudents = 30 [set pon-task random-normal 0.238 0.07]
+set pon-task_mean5 0.013
+set pon-task_mean10 0.024
+set pon-task_mean15 0.044
+set pon-task_mean20 0.08
+set pon-task_mean25 0.14
+set pon-task_mean30 0.24
+
+set pon-task_sd5 0.002
+set pon-task_sd10 0.007
+set pon-task_sd15 0.0012
+set pon-task_sd20 0.02
+set pon-task_sd25 0.03
+set pon-task_sd30 0.07
+
+  if NumberOfStudents = 5 [set pon-task random-normal pon-task_mean5 pon-task_sd5]
+  if NumberOfStudents = 10 [ set pon-task random-normal pon-task_mean10 pon-task_sd10]
+  if NumberOfStudents = 15 [ set pon-task random-normal pon-task_mean15 pon-task_sd15]
+  if NumberOfStudents = 20 [set pon-task random-normal pon-task_mean20 pon-task_sd20]
+  if NumberOfStudents = 25 [set pon-task random-normal pon-task_mean25 pon-task_sd25]
+  if NumberOfStudents = 30 [set pon-task random-normal pon-task_mean30 pon-task_sd30]
 
 
   ; checking that values stay within their range
@@ -197,9 +216,7 @@ end
 
 to calculate-probability-threshold
   set probability-threshold
-  (baseline-attention - pon-task) ;this function need fixing
-  if probability-threshold < 0  ; safeguarding for negative values, since we are interested in the difference
-  [set probability-threshold (pon-task - baseline-attention)]
+    (baseline-attention - pon-task) ;this function need fixing
 end
 
 
@@ -298,27 +315,26 @@ to create-output-file ; change to give outfile ; generate filename and create bl
   set Output_file (word pathdir:get-CWD-path sep "students_output" sep filename)
 
   file-open Output_file
-  file-print csv:to-row (list "NumberOfStudents" "Better_roll" "Worse_roll" "Pon-task" "Ticks" "ID" "End_knowledge" "Baseline-attention" )
+  file-print csv:to-row (list "NumberOfStudents" "pon-task_mean" "pon-task_sd" "Better_roll" "Worse_roll" "Ticks" "ID" "End_knowledge" "Baseline-attention" )
   file-close
 
 end
 
 to export-results ; export current results added ;
 
- ; ifelse behaviorspace-run-number = 0 [
     ; export patches to csv
     file-open Output_file
     ask students [
-      file-print csv:to-row (list NumberOfStudents better_roll worse_roll pon-task ticks who knowledge baseline-attention)
+      file-print csv:to-row (list
+      NumberOfStudents pon-task_mean pon-task_sd better_roll worse_roll ticks who knowledge baseline-attention)
     ]
     file-close
 
 end
 
-; to test for just one run
 to write-students-to-csv
   csv:to-file "students.csv" [
-    (list NumberOfStudents better_roll worse_roll ticks who knowledge baseline-attention)
+    (list NumberOfStudents pon-task_mean pon-task_sd better_roll worse_roll ticks who knowledge baseline-attention)
   ] of students
 end
 @#$#@#$#@
@@ -463,6 +479,36 @@ better_roll
 1
 0.9
 0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+22
+290
+194
+323
+pon-task_mean
+pon-task_mean
+0
+0.5
+0.28
+0.001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+26
+330
+198
+363
+pon-task_sd
+pon-task_sd
+0
+0.5
+0.09
+0.001
 1
 NIL
 HORIZONTAL
@@ -814,23 +860,18 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment_roll" repetitions="5" runMetricsEveryStep="false">
+  <experiment name="experiment_pon-task" repetitions="2" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <steppedValueSet variable="NumberOfStudents" first="5" step="5" last="30"/>
-    <steppedValueSet variable="worse_roll" first="1.05" step="0.05" last="1.5"/>
-    <steppedValueSet variable="better_roll" first="0.5" step="0.05" last="0.95"/>
-  </experiment>
-  <experiment name="experiment_reg" repetitions="100" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <steppedValueSet variable="NumberOfStudents" first="5" step="5" last="30"/>
     <enumeratedValueSet variable="worse_roll">
       <value value="1.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="better_roll">
       <value value="0.9"/>
     </enumeratedValueSet>
+    <steppedValueSet variable="NumberOfStudents" first="5" step="5" last="30"/>
+    <steppedValueSet variable="pon-task_sd" first="0" step="0.01" last="0.09"/>
+    <steppedValueSet variable="pon-task_mean" first="0.01" step="0.01" last="0.3"/>
   </experiment>
 </experiments>
 @#$#@#$#@
