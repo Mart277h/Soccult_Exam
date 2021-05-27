@@ -1,0 +1,41 @@
+---
+title: "stats_folkeskolen"
+author: "Martine Lind Jensen"
+date: "17/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load(tidyverse)
+```
+
+```{r}
+year <- c("12/13", "13/14", "14/15", "15/16", "16/17", "17/18", "18/19", "19/20")
+
+under2_pr <- c(1.5, 1.5, 0.9, 1.0, 1.1, 1.3, 1.3, 1.8)
+  
+two_four_pr <- c(10.8, 10.6, 9.0, 8.6, 8.6, 9.1, 8.8, 8.8)
+
+four_seven_pr <- c(34.8, 34.2, 32.4, 31.7, 31.6, 32.1, 31.2, 29.1)
+
+seven_ten_pr <- c(38.4, 39.6, 40.8, 42.3, 41.8, 42.0, 42.9, 42.5)
+
+over10_pr <- c(14.4, 14.1,16.9, 16.4, 16.9, 15.5, 15.7, 17.9)
+
+under2 <- c(864, 862, 509,598, 603, 741, 801, 1096) 
+  
+two_four <- c(6316, 6219, 5161, 4944, 4845, 5266, 5315, 5400)
+
+four_seven <- c(20347, 19800, 18473, 18265, 17855,18475, 18766, 17948)
+
+seven_ten <- c(22440, 22904, 23289, 24338, 23608, 24173, 25796, 26211)
+
+over10 <- c(8435, 8174, 9665, 9412, 9533, 8949, 9458, 11033)
+
+stats_df <- data.frame(year, under2, two_four, four_seven, seven_ten, over10, under2_pr, two_four_pr, four_seven_pr, seven_ten_pr, over10_pr)
+
+#write_csv(stats_df, "folkeskolen_stats.csv")
+```
+
